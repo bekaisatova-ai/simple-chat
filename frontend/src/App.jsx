@@ -140,9 +140,9 @@ function App() {
         </div>
       </div>
 
-      <div className="container mx-auto p-4 flex gap-4 h-[calc(100vh-80px)]">
+      <div className="container mx-auto p-2 md:p-4 flex flex-col md:flex-row gap-4 h-[calc(100vh-80px)]">
         {/* Main Chat Area */}
-        <div className="flex-1 flex flex-col">
+        <div className="flex-1 flex flex-col min-h-0">
           <div className="flex-1 bg-white rounded-2xl shadow-xl p-6 mb-4 overflow-y-auto">
             {messages.map((msg, index) => {
               const isOwn = msg.username === username
@@ -204,26 +204,27 @@ function App() {
           </div>
 
           {/* Input Area */}
-          <form onSubmit={handleSend} className="flex gap-3">
+          <form onSubmit={handleSend} className="flex gap-2 md:gap-3">
             <input
               type="text"
               value={input}
               onChange={handleInputChange}
-              placeholder="Введите сообщение..."
-              className="flex-1 px-6 py-4 border-2 border-gray-200 rounded-2xl focus:outline-none focus:border-purple-500 transition-colors shadow-md"
+              placeholder="Сообщение..."
+              className="flex-1 px-4 md:px-6 py-3 md:py-4 border-2 border-gray-200 rounded-2xl focus:outline-none focus:border-purple-500 transition-colors shadow-md text-sm md:text-base"
             />
             <button
               type="submit"
               disabled={!input.trim()}
-              className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 disabled:from-gray-300 disabled:to-gray-300 text-white font-semibold py-4 px-8 rounded-2xl transition duration-200 transform hover:scale-105 disabled:transform-none shadow-md"
+              className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 disabled:from-gray-300 disabled:to-gray-300 text-white font-semibold py-3 md:py-4 px-4 md:px-8 rounded-2xl transition duration-200 transform hover:scale-105 disabled:transform-none shadow-md text-sm md:text-base"
             >
-              Отправить
+              <span className="hidden md:inline">Отправить</span>
+              <span className="md:hidden">➤</span>
             </button>
           </form>
         </div>
 
         {/* Online Users Sidebar */}
-        <div className="w-64 bg-white rounded-2xl shadow-xl p-6 overflow-y-auto">
+        <div className="w-full md:w-64 bg-white rounded-2xl shadow-xl p-4 md:p-6 overflow-y-auto max-h-48 md:max-h-full">
           <h2 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
             <span className="text-2xl">👥</span>
             Онлайн ({onlineUsers.length})
