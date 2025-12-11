@@ -85,9 +85,11 @@ io.on('connection', (socket) => {
         // Try to parse each message individually
         for (const msg of messages) {
           try {
-            parsedMessages.push(JSON.parse(msg));
+            // If msg is already an object, use it directly; otherwise parse it
+            const parsed = typeof msg === 'string' ? JSON.parse(msg) : msg;
+            parsedMessages.push(parsed);
           } catch (parseErr) {
-            console.error('Invalid JSON in Redis, skipping:', msg.substring(0, 50));
+            console.error('Invalid JSON in Redis, skipping:', typeof msg === 'string' ? msg.substring(0, 50) : String(msg).substring(0, 50));
           }
         }
 
