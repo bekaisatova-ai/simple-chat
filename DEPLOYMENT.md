@@ -2,16 +2,22 @@
 
 ## Быстрый старт
 
-### 1. MongoDB Atlas (5 минут)
+### 1. Upstash Redis (2 минуты) - БЕСПЛАТНО
 
-1. Зарегистрируйтесь: https://www.mongodb.com/cloud/atlas/register
-2. Создайте FREE кластер (M0 Sandbox)
-3. Database Access → Add User (запишите username и password)
-4. Network Access → Add IP → Allow from Anywhere (0.0.0.0/0)
-5. Получите строку подключения:
-   - Connect → Connect your application
-   - Скопируйте URI: `mongodb+srv://username:<password>@cluster0.xxxxx.mongodb.net/chatroom`
-   - Замените `<password>` на реальный пароль
+1. Зарегистрируйтесь: https://console.upstash.com/login
+2. Create Database:
+   - Name: `chatroom`
+   - Type: `Regional`
+   - Region: выберите ближайший (например, Europe - Frankfurt)
+3. Скопируйте credentials:
+   - **UPSTASH_REDIS_REST_URL**: `https://xxx.upstash.io`
+   - **UPSTASH_REDIS_REST_TOKEN**: `ваш_токен`
+
+**Преимущества Upstash:**
+- ✅ 10,000 команд в день бесплатно
+- ✅ Без карты, без платежей
+- ✅ Мгновенное подключение
+- ✅ REST API (работает везде)
 
 ### 2. Деплой на Render (Backend)
 
@@ -31,7 +37,8 @@
    ```
 5. Environment Variables:
    ```
-   MONGODB_URI = ваша_строка_подключения_из_atlas
+   UPSTASH_REDIS_REST_URL = https://xxx.upstash.io
+   UPSTASH_REDIS_REST_TOKEN = ваш_токен_из_upstash
    FRONTEND_URL = https://ваш-frontend.vercel.app (добавите после)
    ```
 6. Create Web Service
@@ -80,7 +87,7 @@ git push
 
 ### Backend не работает
 - Проверьте логи в Render Dashboard
-- Убедитесь что MONGODB_URI корректен
+- Убедитесь что Redis credentials правильные
 - Проверьте Root Directory = backend
 
 ### Frontend не подключается
@@ -88,10 +95,10 @@ git push
 - Убедитесь что backend URL доступен
 - Проверьте CORS (FRONTEND_URL в Render)
 
-### MongoDB ошибки
-- Проверьте пароль в строке подключения
-- IP должен быть 0.0.0.0/0 в Network Access
-- Пользователь должен иметь права read/write
+### Redis ошибки
+- Проверьте UPSTASH_REDIS_REST_URL и TOKEN
+- URL должен быть полным (https://xxx.upstash.io)
+- Token должен быть скопирован полностью
 
 ## 📞 Поддержка
 

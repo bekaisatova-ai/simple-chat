@@ -2,7 +2,7 @@ const express = require('express');
 const http = require('http');
 const socketIo = require('socket.io');
 const cors = require('cors');
-const mongoose = require('mongoose');
+const { Redis } = require('@upstash/redis');
 
 const app = express();
 const server = http.createServer(app);
@@ -22,36 +22,33 @@ const io = socketIo(server, {
 app.use(cors());
 app.use(express.json());
 
-// MongoDB connection
-let isMongoConnected = false;
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/simple-chat';
+// Redis connection
+let redis = null;
+let isRedisConnected = false;
 
-mongoose.connect(MONGODB_URI, {
-  serverSelectionTimeoutMS: 3000,
-  socketTimeoutMS: 3000,
-})
-  .then(() => {
-    console.log('✅ Connected to MongoDB');
-    isMongoConnected = true;
-  })
-  .catch(err => {
-    console.log('❌ MongoDB connection error:', err.message);
+if (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN) {
+  try {
+    redis = new Redis({
+      url: process.env.UPSTASH_REDIS_REST_URL,
+      token: process.env.UPSTASH_REDIS_REST_TOKEN,
+    });
+    isRedisConnected = true;
+    console.log('✅ Connected to Upstash Redis');
+  } catch (err) {
+    console.log('❌ Redis connection error:', err.message);
     console.log('⚠️  Running in memory-only mode');
-    isMongoConnected = false;
-  });
-
-// Message Schema
-const messageSchema = new mongoose.Schema({
-  username: { type: String, required: true },
-  text: { type: String, required: true },
-  timestamp: { type: Date, default: Date.now },
-  avatar: { type: String }
-});
-
-const Message = mongoose.model('Message', messageSchema);
+    isRedisConnected = false;
+  }
+} else {
+  console.log('⚠️  Redis credentials not found - running in memory-only mode');
+}
 
 // In-memory message storage (fallback)
 let memoryMessages = [];
+
+// Redis keys
+const MESSAGES_KEY = 'chatroom:messages';
+const MAX_MESSAGES = 100;
 
 // Store active users and typing status
 let users = new Map(); // socketId -> { username, avatar }
@@ -80,12 +77,13 @@ io.on('connection', (socket) => {
     users.set(socket.id, { username, avatar });
 
     // Send message history
-    if (isMongoConnected) {
+    if (isRedisConnected) {
       try {
-        const messages = await Message.find().sort({ timestamp: -1 }).limit(100).lean();
-        socket.emit('history', messages.reverse());
+        const messages = await redis.lrange(MESSAGES_KEY, 0, -1);
+        const parsedMessages = messages.map(msg => JSON.parse(msg));
+        socket.emit('history', parsedMessages);
       } catch (err) {
-        console.error('Error fetching history:', err);
+        console.error('Error fetching history from Redis:', err);
         socket.emit('history', memoryMessages);
       }
     } else {
@@ -104,39 +102,39 @@ io.on('connection', (socket) => {
     if (!user) return;
 
     const msg = {
+      _id: Date.now().toString(),
       username: user.username,
       text: data.text,
-      timestamp: new Date(),
+      timestamp: new Date().toISOString(),
       avatar: user.avatar
     };
 
     // Save message
-    if (isMongoConnected) {
+    if (isRedisConnected) {
       try {
-        const savedMessage = await Message.create(msg);
-        const messageToSend = {
-          _id: savedMessage._id,
-          username: savedMessage.username,
-          text: savedMessage.text,
-          timestamp: savedMessage.timestamp,
-          avatar: savedMessage.avatar
-        };
-        io.emit('message', messageToSend);
+        // Add message to Redis list
+        await redis.rpush(MESSAGES_KEY, JSON.stringify(msg));
+
+        // Trim list to keep only last MAX_MESSAGES
+        const listLength = await redis.llen(MESSAGES_KEY);
+        if (listLength > MAX_MESSAGES) {
+          await redis.ltrim(MESSAGES_KEY, listLength - MAX_MESSAGES, -1);
+        }
+
+        io.emit('message', msg);
       } catch (err) {
-        console.error('Error saving message:', err);
-        isMongoConnected = false;
+        console.error('Error saving message to Redis:', err);
+        isRedisConnected = false;
         // Fallback to memory
-        const messageToSend = { ...msg, _id: Date.now() };
-        memoryMessages.push(messageToSend);
-        if (memoryMessages.length > 100) memoryMessages.shift();
-        io.emit('message', messageToSend);
+        memoryMessages.push(msg);
+        if (memoryMessages.length > MAX_MESSAGES) memoryMessages.shift();
+        io.emit('message', msg);
       }
     } else {
       // Use memory storage
-      const messageToSend = { ...msg, _id: Date.now() };
-      memoryMessages.push(messageToSend);
-      if (memoryMessages.length > 100) memoryMessages.shift();
-      io.emit('message', messageToSend);
+      memoryMessages.push(msg);
+      if (memoryMessages.length > MAX_MESSAGES) memoryMessages.shift();
+      io.emit('message', msg);
     }
 
     // Remove from typing users
