@@ -80,11 +80,34 @@ io.on('connection', (socket) => {
     if (isRedisConnected) {
       try {
         const messages = await redis.lrange(MESSAGES_KEY, 0, -1);
-        const parsedMessages = messages.map(msg => JSON.parse(msg));
+        const parsedMessages = [];
+
+        // Try to parse each message individually
+        for (const msg of messages) {
+          try {
+            parsedMessages.push(JSON.parse(msg));
+          } catch (parseErr) {
+            console.error('Invalid JSON in Redis, skipping:', msg.substring(0, 50));
+          }
+        }
+
+        // If all messages are corrupted, clear Redis
+        if (parsedMessages.length === 0 && messages.length > 0) {
+          console.log('🗑️  All messages corrupted, clearing Redis...');
+          await redis.del(MESSAGES_KEY);
+        }
+
         socket.emit('history', parsedMessages);
       } catch (err) {
         console.error('Error fetching history from Redis:', err);
-        socket.emit('history', memoryMessages);
+        // Try to clear corrupted data
+        try {
+          await redis.del(MESSAGES_KEY);
+          console.log('🗑️  Cleared corrupted Redis data');
+        } catch (delErr) {
+          console.error('Error clearing Redis:', delErr);
+        }
+        socket.emit('history', []);
       }
     } else {
       socket.emit('history', memoryMessages);
