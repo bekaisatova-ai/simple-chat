@@ -140,10 +140,10 @@ function App() {
         </div>
       </div>
 
-      <div className="container mx-auto p-2 md:p-4 flex flex-col md:flex-row gap-4 h-[calc(100vh-80px)]">
+      <div className="container mx-auto p-2 md:p-4 flex flex-col-reverse md:flex-row gap-2 md:gap-4 h-[calc(100vh-80px)]">
         {/* Main Chat Area */}
-        <div className="flex-1 flex flex-col min-h-0">
-          <div className="flex-1 bg-white rounded-2xl shadow-xl p-6 mb-4 overflow-y-auto">
+        <div className="flex-1 flex flex-col">
+          <div className="flex-1 bg-white rounded-2xl shadow-xl p-3 md:p-6 mb-2 md:mb-4 overflow-y-auto">
             {messages.map((msg, index) => {
               const isOwn = msg.username === username
               const showAvatar = index === 0 || messages[index - 1].username !== msg.username
@@ -151,27 +151,27 @@ function App() {
               return (
                 <div
                   key={msg._id || msg.id}
-                  className={`mb-4 flex ${isOwn ? 'justify-end' : 'justify-start'} animate-fadeIn`}
+                  className={`mb-2 md:mb-4 flex ${isOwn ? 'justify-end' : 'justify-start'} animate-fadeIn`}
                 >
                   {!isOwn && showAvatar && (
-                    <div className={`w-8 h-8 rounded-full ${msg.avatar} flex items-center justify-center text-white font-bold mr-2 flex-shrink-0`}>
+                    <div className={`w-6 h-6 md:w-8 md:h-8 rounded-full ${msg.avatar} flex items-center justify-center text-white font-bold mr-1 md:mr-2 flex-shrink-0 text-xs md:text-sm`}>
                       {msg.username[0].toUpperCase()}
                     </div>
                   )}
-                  {!isOwn && !showAvatar && <div className="w-8 mr-2" />}
+                  {!isOwn && !showAvatar && <div className="w-6 md:w-8 mr-1 md:mr-2" />}
 
-                  <div className={`max-w-xs lg:max-w-md`}>
+                  <div className={`max-w-[75%] md:max-w-xs lg:max-w-md`}>
                     {showAvatar && (
                       <div className={`text-xs font-semibold mb-1 ${isOwn ? 'text-right' : 'text-left'} text-gray-600`}>
                         {msg.username}
                       </div>
                     )}
-                    <div className={`px-4 py-2 rounded-2xl ${
+                    <div className={`px-3 py-2 md:px-4 md:py-2 rounded-2xl ${
                       isOwn
                         ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-br-none'
                         : 'bg-gray-100 text-gray-800 rounded-bl-none'
                     } shadow-md`}>
-                      <div className="break-words">{msg.text}</div>
+                      <div className="break-words text-sm md:text-base">{msg.text}</div>
                       <div className={`text-xs mt-1 ${isOwn ? 'text-purple-100' : 'text-gray-500'}`}>
                         {formatTime(msg.timestamp)}
                       </div>
@@ -179,11 +179,11 @@ function App() {
                   </div>
 
                   {isOwn && showAvatar && (
-                    <div className={`w-8 h-8 rounded-full ${msg.avatar} flex items-center justify-center text-white font-bold ml-2 flex-shrink-0`}>
+                    <div className={`w-6 h-6 md:w-8 md:h-8 rounded-full ${msg.avatar} flex items-center justify-center text-white font-bold ml-1 md:ml-2 flex-shrink-0 text-xs md:text-sm`}>
                       {msg.username[0].toUpperCase()}
                     </div>
                   )}
-                  {isOwn && !showAvatar && <div className="w-8 ml-2" />}
+                  {isOwn && !showAvatar && <div className="w-6 md:w-8 ml-1 md:ml-2" />}
                 </div>
               )
             })}
@@ -224,22 +224,23 @@ function App() {
         </div>
 
         {/* Online Users Sidebar */}
-        <div className="w-full md:w-64 bg-white rounded-2xl shadow-xl p-4 md:p-6 overflow-y-auto max-h-48 md:max-h-full">
-          <h2 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
-            <span className="text-2xl">👥</span>
-            Онлайн ({onlineUsers.length})
+        <div className="md:w-64 bg-white rounded-2xl shadow-xl p-3 md:p-6 overflow-x-auto md:overflow-y-auto">
+          <h2 className="text-sm md:text-lg font-bold text-gray-800 mb-2 md:mb-4 flex items-center gap-2">
+            <span className="text-xl md:text-2xl">👥</span>
+            <span className="hidden md:inline">Онлайн ({onlineUsers.length})</span>
+            <span className="md:hidden">{onlineUsers.length}</span>
           </h2>
-          <div className="space-y-3">
+          <div className="flex md:flex-col gap-2 md:gap-3 md:space-y-0">
             {onlineUsers.map((user, index) => (
               <div
                 key={index}
-                className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 transition-colors animate-fadeIn"
+                className="flex md:flex-row items-center gap-2 md:gap-3 p-1 md:p-2 rounded-lg hover:bg-gray-50 transition-colors animate-fadeIn flex-shrink-0"
               >
-                <div className={`w-10 h-10 rounded-full ${user.avatar} flex items-center justify-center text-white font-bold shadow-md`}>
+                <div className={`w-8 h-8 md:w-10 md:h-10 rounded-full ${user.avatar} flex items-center justify-center text-white font-bold shadow-md text-xs md:text-base`}>
                   {user.username[0].toUpperCase()}
                 </div>
-                <div className="flex-1">
-                  <div className="font-medium text-gray-800">
+                <div className="hidden md:block flex-1">
+                  <div className="font-medium text-gray-800 text-sm">
                     {user.username}
                     {user.username === username && (
                       <span className="text-xs text-purple-500 ml-1">(вы)</span>
@@ -249,7 +250,7 @@ function App() {
                     <div className="text-xs text-gray-500 italic">печатает...</div>
                   )}
                 </div>
-                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse hidden md:block" />
               </div>
             ))}
           </div>
